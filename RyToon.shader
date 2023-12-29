@@ -61,7 +61,7 @@ Shader "MatLayer/RyToon" {
             half3 Albedo;
             half3 Normal;
             half3 Emission;
-            half3 Subsurface;
+            half Subsurface;
             half Alpha;
         };
 
@@ -74,12 +74,17 @@ Shader "MatLayer/RyToon" {
             half NdotL = max(0, dot(s.Normal, lightDir));
             half HalfLambert = pow(NdotL * 0.5 + 0.5, 2);
 
-            // The toon shader used in Genshin Impact uses an artifical subsurface scattering effect which allows...
-            // simulating light scattering through organic objects such as skin, wax and clothes.
+            // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes.
             // If a subsurface (a.k.a thickness) texture is provided, we'll use it to determine where subsurface should be applied to the object.
             half3 subsurface;
-            half diffuseWrap = 1 - pow(NdotL * _WrapValue + (1 - _WrapValue), 2);
-            subsurface = diffuseWrap * _Subsurface * _SubsurfaceColor;
+            if (s.Subsurface) {
+                subsurface = s.Subsurface * _Subsurface * _SubsurfaceColor;
+            }
+
+            // If a subsurface texture is not provided, we'll reuse the half lambert as an approximation for subsurface scattering.
+            else {
+                subsurface = (1 - HalfLambert) * _Subsurface * _SubsurfaceColor;
+            }
 
             // Calculate specular reflections using the Beckmann normal distribution method.
             float3 halfDirection = normalize(viewDir + lightDir);
@@ -91,7 +96,7 @@ Shader "MatLayer/RyToon" {
 
             // Calculate accumulative lighting contributions.
             //c.rgb = (s.Albedo * _LightColor0.rgb * HalfLambert + _LightColor0.rgb * spec + sheen) * atten + subsurface.rgb;
-            c.rgb = s.Albedo * _LightColor0.rgb * HalfLambert;
+            c.rgb = s.Albedo * _LightColor0.rgb * HalfLambert * atten;
             c.a = s.Alpha;
             return c;
         }
@@ -118,7 +123,7 @@ Shader "MatLayer/RyToon" {
             o.Albedo = saturate(lerp(baseColor, baseColor * metallic, _Metallic));
             //o.Normal = UnpackNormal (tex2D (_NormalMap, IN.uv_NormalMap));
             o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
-            //o.Subsurface = (tex2D (_SubsurfaceTexture, IN.uv_SubsurfaceTexture).rgb);
+            o.Subsurface = (tex2D (_SubsurfaceTexture, IN.uv_SubsurfaceTexture).rgb);
         }
         ENDCG
     } 
