@@ -22,7 +22,8 @@ Shader "MatLayer/RyToon" {
         _Roughness ("Roughness", Range(0.0, 1.0)) = 0.5
         _Metallic ("Metallic", Range(0.0, 1.0)) = 0
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0.0, 1.0)) = 0
-        _SubsurfaceColor ("Subsurface Tint", Color) = (1.0, 1.0, 1.0, 1.0)
+        _SubsurfaceRadius ("Subsurface Radius", Range(0.0, 1.0)) = 0.5
+        _SubsurfaceColor ("Subsurface Color", Color) = (1.0, 0.2, 0.1, 1.0)
         _SheenIntensity ("Sheen Intensity", Range(0.0, 1.0)) = 0.0
         _SheenColor ("Sheen Color", Color) = (1.0, 1.0, 1.0, 1.0)
     }
@@ -41,9 +42,9 @@ Shader "MatLayer/RyToon" {
         fixed4 _Color;
         half _Roughness;
         float _Metallic;
-        float _SubsurfaceIntensity;
+        half _SubsurfaceIntensity;
+        half _SubsurfaceRadius;
         fixed4 _SubsurfaceColor;
-        float _WrapValue;
         fixed4 _SheenColor;
         float _SheenIntensity;
 
@@ -71,10 +72,9 @@ Shader "MatLayer/RyToon" {
             half NdotL = max(0, dot(s.Normal, lightDir));
             half HalfLambert = pow(NdotL * 0.5 + 0.5, 2);
 
-            // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes, and is important as it plays a vital role in modern
-            // anime and toon shaders looking good, use the Genshin Impact shader as an example.
-            // We'll reuse the half lambert lighting as an approximation for subsurface scattering.
-            half3 subsurface = (1 - HalfLambert) * _SubsurfaceIntensity * _SubsurfaceColor;
+            // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes, and is important for modern anime and toon shaders looking good, use the Genshin Impact shader as an example.
+            // We'll calculation a diffuse wrap (similar to half lambert) as an approximation for subsurface scattering.
+            half3 subsurface = pow(NdotL * _SubsurfaceRadius + (1 - _SubsurfaceRadius), 2) * _SubsurfaceColor * _SubsurfaceIntensity;
 
             // Calculate specular reflections using the Beckmann normal distribution method.
             float3 halfDirection = normalize(viewDir + lightDir);
@@ -85,7 +85,7 @@ Shader "MatLayer/RyToon" {
             half sheen = pow(1 - dot(s.Normal, halfDirection), 5) * _SheenIntensity * _SheenColor;
 
             // Calculate accumulative lighting contributions.
-            c.rgb = (s.Albedo * _LightColor0.rgb * HalfLambert + subsurface.rgb) * atten;
+            c.rgb = (s.Albedo * HalfLambert * _LightColor0.rgb ) * (NdotL * atten) + subsurface.rgb;
             c.a = s.Alpha;
             return c;
         }
