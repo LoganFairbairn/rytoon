@@ -10,6 +10,7 @@
 // Fast Subsurface Scattering for Unity URP     -   https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
 // Genshin Impact Shader in UE5                 -   https://www.artstation.com/artwork/g0gGOm
 // Ben Ayers Blender NPR Genshin Impact Shader  -   https://www.artstation.com/blogs/bjayers/9oOD/blender-npr-recreating-the-genshin-impact-shader
+// Unity Surface Shader Lighting Examples       -   https://docs.unity3d.com/Manual/SL-SurfaceShaderLightingExamples.html
 
 Shader "MatLayer/RyToon" {
     Properties {
@@ -17,13 +18,11 @@ Shader "MatLayer/RyToon" {
         _ColorTexture ("Color Texture", 2D) = "white" {}
         _NormalMap ("Normal Map", 2D) = "bump" {}
         _ORMTexture ("ORM Texture", 2D) = "black" {}
-        _SubsurfaceTexture ("Subsurface Texture", 2D) = "black" {}
         _EmissionTexture ("Emission Texture", 2D) = "black" {}
         _Roughness ("Roughness", Range(0.0, 1.0)) = 0.5
         _Metallic ("Metallic", Range(0.0, 1.0)) = 0
-        _Subsurface ("Subsurface", Range(0.0, 1.0)) = 0
+        _SubsurfaceIntensity ("Subsurface Intensity", Range(0.0, 1.0)) = 0
         _SubsurfaceColor ("Subsurface Tint", Color) = (1.0, 1.0, 1.0, 1.0)
-        _WrapValue ("Wrap Value", Range(0.0, 1.0)) = 0.5
         _SheenIntensity ("Sheen Intensity", Range(0.0, 1.0)) = 0.0
         _SheenColor ("Sheen Color", Color) = (1.0, 1.0, 1.0, 1.0)
     }
@@ -38,12 +37,11 @@ Shader "MatLayer/RyToon" {
         sampler2D _ColorTexture;
         sampler2D _ORMTexture;
         sampler2D _NormalMap;
-        sampler2D _SubsurfaceTexture;
         sampler2D _EmissionTexture;
         fixed4 _Color;
         half _Roughness;
         float _Metallic;
-        float _Subsurface;
+        float _SubsurfaceIntensity;
         fixed4 _SubsurfaceColor;
         float _WrapValue;
         fixed4 _SheenColor;
@@ -61,7 +59,6 @@ Shader "MatLayer/RyToon" {
             half3 Albedo;
             half3 Normal;
             half3 Emission;
-            half Subsurface;
             half Alpha;
         };
 
@@ -74,17 +71,10 @@ Shader "MatLayer/RyToon" {
             half NdotL = max(0, dot(s.Normal, lightDir));
             half HalfLambert = pow(NdotL * 0.5 + 0.5, 2);
 
-            // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes.
-            // If a subsurface (a.k.a thickness) texture is provided, we'll use it to determine where subsurface should be applied to the object.
-            half3 subsurface;
-            if (s.Subsurface) {
-                subsurface = s.Subsurface * _Subsurface * _SubsurfaceColor;
-            }
-
-            // If a subsurface texture is not provided, we'll reuse the half lambert as an approximation for subsurface scattering.
-            else {
-                subsurface = (1 - HalfLambert) * _Subsurface * _SubsurfaceColor;
-            }
+            // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes, and is important as it plays a vital role in modern
+            // anime and toon shaders looking good, use the Genshin Impact shader as an example.
+            // We'll reuse the half lambert lighting as an approximation for subsurface scattering.
+            half3 subsurface = (1 - HalfLambert) * _SubsurfaceIntensity * _SubsurfaceColor;
 
             // Calculate specular reflections using the Beckmann normal distribution method.
             float3 halfDirection = normalize(viewDir + lightDir);
@@ -95,8 +85,7 @@ Shader "MatLayer/RyToon" {
             half sheen = pow(1 - dot(s.Normal, halfDirection), 5) * _SheenIntensity * _SheenColor;
 
             // Calculate accumulative lighting contributions.
-            //c.rgb = (s.Albedo * _LightColor0.rgb * HalfLambert + _LightColor0.rgb * spec + sheen) * atten + subsurface.rgb;
-            c.rgb = s.Albedo * _LightColor0.rgb * HalfLambert * atten;
+            c.rgb = (s.Albedo * _LightColor0.rgb * HalfLambert + subsurface.rgb) * atten;
             c.a = s.Alpha;
             return c;
         }
@@ -123,7 +112,6 @@ Shader "MatLayer/RyToon" {
             o.Albedo = saturate(lerp(baseColor, baseColor * metallic, _Metallic));
             //o.Normal = UnpackNormal (tex2D (_NormalMap, IN.uv_NormalMap));
             o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
-            o.Subsurface = (tex2D (_SubsurfaceTexture, IN.uv_SubsurfaceTexture).rgb);
         }
         ENDCG
     } 
