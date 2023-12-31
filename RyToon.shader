@@ -29,10 +29,13 @@ Shader "MatLayer/RyToon" {
     }
     SubShader {
         Tags { "RenderType" = "Opaque" }
+        LOD 200
+
         CGPROGRAM
 
         // Support all light shadow types with 'fullforwardshadows' https://docs.unity3d.com/Manual/SL-SurfaceShaders.html
         #pragma surface surf RyToon fullforwardshadows
+        #pragma target 3.0
 
         // Custom Properties
         sampler2D _ColorTexture;
@@ -65,6 +68,9 @@ Shader "MatLayer/RyToon" {
 
         // Calculate custom lighting here.
         half4 LightingRyToon (CustomSurfaceOutput s, half3 lightDir, half viewDir, half atten) {
+
+
+            /*----------------------------- Base Lighting -----------------------------*/
             // Half Lambert lighting is a technique created by Valve for Half-Life designed to prevent the rear of the object from losing it's shape.
             // This technique provides a good middle ground between a totally toon lighting approach and a physically accurate approach.
             // Calculate base lighting using the half-lambert lighting model.
@@ -72,25 +78,29 @@ Shader "MatLayer/RyToon" {
             half NdotL = max(0, dot(s.Normal, lightDir));
             half HalfLambert = pow(NdotL * 0.5 + 0.5, 2);
 
+            /*----------------------------- Artifical Subsurface Scattering -----------------------------*/
             // Subsurface scattering simulates light scattering through objects such as skin, wax and clothes, and is important for modern anime and toon shaders looking good, use the Genshin Impact shader as an example.
             // We'll calculation a diffuse wrap (similar to half lambert) as an approximation for subsurface scattering.
             half3 subsurface = pow(NdotL * _SubsurfaceRadius + (1 - _SubsurfaceRadius), 2) * _SubsurfaceColor * _SubsurfaceIntensity;
 
+            /*----------------------------- Specular Lighting -----------------------------*/
             // Calculate specular reflections using the Beckmann normal distribution method.
             float3 halfDirection = normalize(viewDir + lightDir);
             float NdotH = max(0.0, dot(s.Normal, halfDirection));
             float specular = BeckmannNormalDistribution(_Roughness, NdotH);
 
+            /*----------------------------- Artifical Metallic -----------------------------*/
             // Calculate artifical metalness as a spherical gradient matcap.
             half3 viewSpaceNormals = mul((float3x3)UNITY_MATRIX_V, s.Normal);
             viewSpaceNormals.xyz *= float3(0.5, 0.5, 1.0);
             float metallic = saturate(1 - (length(viewSpaceNormals)));
             metallic = smoothstep(0.3, 0.0, metallic) * _Metallic;
 
+            /*----------------------------- Sheen -----------------------------*/
             // Calculate a sheen approximation, which is useful for simulating microfiber lighting for fabric and cloth.
             half sheen = pow(1 - dot(s.Normal, halfDirection), 5) * _SheenIntensity * _SheenColor;
 
-            // Calculate accumulative lighting contributions.
+            /*----------------------------- Accumulated Lighting -----------------------------*/
             half3 baseLighting = (s.Albedo * HalfLambert * _LightColor0.rgb + specular) * (NdotL * atten);
             c.rgb = lerp(baseLighting, baseLighting * metallic, _Metallic) + subsurface.rgb;
             c.a = s.Alpha;
@@ -103,8 +113,8 @@ Shader "MatLayer/RyToon" {
             float2 uv_NormalMap;
             float2 uv_EmissionTexture;
         };
-
-        // Apply textures and channel packing.
+        
+        /*----------------------------- Apply Textures & Channel Packing  -----------------------------*/
         void surf (Input IN, inout CustomSurfaceOutput o) {
             half3 baseColor = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Color;
             o.Albedo = baseColor;
