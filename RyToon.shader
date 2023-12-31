@@ -37,6 +37,13 @@ Shader "MatLayer/RyToon" {
         #pragma surface surf RyToon fullforwardshadows
         #pragma target 3.0
 
+        // Input Structure
+        struct Input {
+            float2 uv_ColorTexture;
+            float2 uv_NormalMap;
+            float2 uv_EmissionTexture;
+        };
+
         // Custom Properties
         sampler2D _ColorTexture;
         sampler2D _ORMTexture;
@@ -106,13 +113,6 @@ Shader "MatLayer/RyToon" {
             c.a = s.Alpha;
             return c;
         }
-
-        // Input Structure
-        struct Input {
-            float2 uv_ColorTexture;
-            float2 uv_NormalMap;
-            float2 uv_EmissionTexture;
-        };
         
         /*----------------------------- Apply Textures & Channel Packing  -----------------------------*/
         void surf (Input IN, inout CustomSurfaceOutput o) {
