@@ -7,10 +7,12 @@
 // Github for this shader: https://github.com/LoganFairbairn/RyToon
 
 // Reference links for this shader:
-// Fast Subsurface Scattering for Unity URP     -   https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
-// Genshin Impact Shader in UE5                 -   https://www.artstation.com/artwork/g0gGOm
-// Ben Ayers Blender NPR Genshin Impact Shader  -   https://www.artstation.com/blogs/bjayers/9oOD/blender-npr-recreating-the-genshin-impact-shader
-// Unity Surface Shader Lighting Examples       -   https://docs.unity3d.com/Manual/SL-SurfaceShaderLightingExamples.html
+// Fast Subsurface Scattering for Unity URP                     -   https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
+// Genshin Impact Shader in UE5                                 -   https://www.artstation.com/artwork/g0gGOm
+// Ben Ayers Blender NPR Genshin Impact Shader                  -   https://www.artstation.com/blogs/bjayers/9oOD/blender-npr-recreating-the-genshin-impact-shader
+// Unity Surface Shader Lighting Examples                       -   https://docs.unity3d.com/Manual/SL-SurfaceShaderLightingExamples.html
+// Support all light shadow types with 'fullforwardshadows'     -   https://docs.unity3d.com/Manual/SL-SurfaceShaders.html
+
 
 Shader "MatLayer/RyToon" {
     Properties {
@@ -30,20 +32,24 @@ Shader "MatLayer/RyToon" {
     SubShader {
         Tags { "RenderType" = "Opaque" }
         LOD 200
-
+        
         CGPROGRAM
-
-        // Support all light shadow types with 'fullforwardshadows' https://docs.unity3d.com/Manual/SL-SurfaceShaders.html
         #pragma surface surf RyToon fullforwardshadows
         #pragma target 3.0
 
         #define PI 3.14159265358979323846f
 
-        // Input Structure
         struct Input {
             float2 uv_ColorTexture;
             float2 uv_NormalMap;
             float2 uv_EmissionTexture;
+        };
+
+        struct CustomSurfaceOutput {
+            half3 Albedo;
+            half3 Normal;
+            half3 Emission;
+            half Alpha;
         };
 
         // Custom Properties
@@ -66,14 +72,6 @@ Shader "MatLayer/RyToon" {
             float NdotHSqr = NdotH * NdotH;
             return max(0.000001,(1.0 / (3.1415926535 * roughnessSqr * NdotHSqr * NdotHSqr)) * exp((NdotHSqr-1)/(roughnessSqr*NdotHSqr)));
         }
-
-        // Custom surface output defines the input and output required for shader calculations.
-        struct CustomSurfaceOutput {
-            half3 Albedo;
-            half3 Normal;
-            half3 Emission;
-            half Alpha;
-        };
 
         // Calculate custom lighting here.
         half4 LightingRyToon (CustomSurfaceOutput s, half3 lightDir, half viewDir, half atten) {
