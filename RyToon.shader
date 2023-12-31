@@ -79,13 +79,20 @@ Shader "MatLayer/RyToon" {
             // Calculate specular reflections using the Beckmann normal distribution method.
             float3 halfDirection = normalize(viewDir + lightDir);
             float NdotH = max(0.0, dot(s.Normal, halfDirection));
-            float spec = BeckmannNormalDistribution(_Roughness, NdotH);
+            float specular = BeckmannNormalDistribution(_Roughness, NdotH);
+
+            // Calculate artifical metalness as a spherical gradient matcap.
+            half3 viewSpaceNormals = mul((float3x3)UNITY_MATRIX_V, s.Normal);
+            viewSpaceNormals.xyz *= float3(0.5, 0.5, 1.0);
+            float metallic = saturate(1 - (length(viewSpaceNormals)));
+            metallic = smoothstep(0.3, 0.0, metallic) * _Metallic;
 
             // Calculate a sheen approximation, which is useful for simulating microfiber lighting for fabric and cloth.
             half sheen = pow(1 - dot(s.Normal, halfDirection), 5) * _SheenIntensity * _SheenColor;
 
             // Calculate accumulative lighting contributions.
-            c.rgb = (s.Albedo * HalfLambert * _LightColor0.rgb ) * (NdotL * atten) + subsurface.rgb;
+            half3 baseLighting = (s.Albedo * HalfLambert * _LightColor0.rgb + specular) * (NdotL * atten);
+            c.rgb = lerp(baseLighting, baseLighting * metallic, _Metallic) + subsurface.rgb;
             c.a = s.Alpha;
             return c;
         }
@@ -98,18 +105,10 @@ Shader "MatLayer/RyToon" {
             float2 uv_SubsurfaceTexture;
         };
 
-        // Main shader calculations.
+        // Apply textures and channel packing.
         void surf (Input IN, inout CustomSurfaceOutput o) {
-
-            // Calculate artifical metalness as a spherical gradient matcap.
-            half3 viewSpaceNormals = mul((float3x3)UNITY_MATRIX_V, o.Normal);
-            viewSpaceNormals.xyz *= float3(0.5, 0.5, 1.0);
-            float metallic = saturate(1 - (length(viewSpaceNormals)));
-            metallic = smoothstep(0.3, 0.0, metallic);
-
-            // Apply textures and channel packing.
             half3 baseColor = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Color;
-            o.Albedo = saturate(lerp(baseColor, baseColor * metallic, _Metallic));
+            o.Albedo = baseColor;
             //o.Normal = UnpackNormal (tex2D (_NormalMap, IN.uv_NormalMap));
             o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
         }
