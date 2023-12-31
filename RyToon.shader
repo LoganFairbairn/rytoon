@@ -14,18 +14,18 @@
 
 Shader "MatLayer/RyToon" {
     Properties {
-        [MainColor] _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
+        [MainColor] _Color ("Color", Color) = (1, 1, 1, 1)
         [MainTexture] _ColorTexture ("Color Texture", 2D) = "white" {}
         [Normal] _NormalMap ("Normal Map", 2D) = "bump" {}
         _ORMTexture ("ORM Texture", 2D) = "black" {}
         _EmissionTexture ("Emission Texture", 2D) = "black" {}
-        _Roughness ("Roughness", Range(0.0, 1.0)) = 0.5
-        _Metallic ("Metallic", Range(0.0, 1.0)) = 0
-        _SubsurfaceIntensity ("Subsurface Intensity", Range(0.0, 1.0)) = 0
-        _SubsurfaceRadius ("Subsurface Radius", Range(0.0, 1.0)) = 0.5
+        _Roughness ("Roughness", Range(0, 1)) = 0.5
+        _Metallic ("Metallic", Range(0, 1)) = 0
+        _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
+        _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
         _SubsurfaceColor ("Subsurface Color", Color) = (1.0, 0.2, 0.1, 1.0)
-        _SheenIntensity ("Sheen Intensity", Range(0.0, 1.0)) = 0.0
-        _SheenColor ("Sheen Color", Color) = (1.0, 1.0, 1.0, 1.0)
+        _SheenIntensity ("Sheen Intensity", Range(0, 1)) = 0.0
+        _SheenColor ("Sheen Color", Color) = (1, 1, 1, 1)
     }
     SubShader {
         Tags { "RenderType" = "Opaque" }
