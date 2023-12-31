@@ -109,7 +109,7 @@ Shader "MatLayer/RyToon" {
         void surf (Input IN, inout CustomSurfaceOutput o) {
             half3 baseColor = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Color;
             o.Albedo = baseColor;
-            //o.Normal = UnpackNormal (tex2D (_NormalMap, IN.uv_NormalMap));
+            o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_NormalMap));
             o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
         }
         ENDCG
