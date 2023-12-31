@@ -37,6 +37,8 @@ Shader "MatLayer/RyToon" {
         #pragma surface surf RyToon fullforwardshadows
         #pragma target 3.0
 
+        #define PI 3.14159265358979323846f
+
         // Input Structure
         struct Input {
             float2 uv_ColorTexture;
