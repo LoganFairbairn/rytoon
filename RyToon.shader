@@ -32,7 +32,7 @@ Shader "MatLayer/RyToon" {
     SubShader {
         Tags { "RenderType" = "Opaque" }
         LOD 200
-        
+
         CGPROGRAM
         #pragma surface surf RyToon fullforwardshadows
         #pragma target 3.0
@@ -66,6 +66,12 @@ Shader "MatLayer/RyToon" {
         fixed4 _SheenColor;
         float _SheenIntensity;
 
+        // Add shader instancing support.
+		UNITY_INSTANCING_BUFFER_START(Props)
+		UNITY_INSTANCING_BUFFER_END(Props)
+
+        /*----------------------------- Shader Functions -----------------------------*/
+
         float BeckmannNormalDistribution(float roughness, float NdotH)
         {
             float roughnessSqr = roughness * roughness;
@@ -73,7 +79,7 @@ Shader "MatLayer/RyToon" {
             return max(0.000001,(1.0 / (3.1415926535 * roughnessSqr * NdotHSqr * NdotHSqr)) * exp((NdotHSqr-1)/(roughnessSqr*NdotHSqr)));
         }
 
-        // Calculate custom lighting here.
+       /*----------------------------- Custom Lighting Calculations -----------------------------*/
         half4 LightingRyToon (CustomSurfaceOutput s, half3 lightDir, half viewDir, half atten) {
 
 
