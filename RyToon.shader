@@ -102,7 +102,6 @@ Shader "MatLayer/RyToon" {
             float2 uv_ColorTexture;
             float2 uv_NormalMap;
             float2 uv_EmissionTexture;
-            float2 uv_SubsurfaceTexture;
         };
 
         // Apply textures and channel packing.
