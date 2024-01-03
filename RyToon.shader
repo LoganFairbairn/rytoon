@@ -18,6 +18,7 @@
 // Fresnel Wiki                                                 -   https://en.wikipedia.org/wiki/Fresnel_equations
 // Beckmann Distribution Wiki                                   -   https://en.wikipedia.org/wiki/Specular_highlight#Beckmann_distribution
 // Schlick's Approximation Wiki                                 -   https://en.wikipedia.org/wiki/Schlick%27s_approximation
+// Catlike Coding (Rendering Part 8)                            -   https://catlikecoding.com/unity/tutorials/rendering/part-8/
 
 
 Shader "MatLayer/RyToon" {
@@ -159,9 +160,15 @@ Shader "MatLayer/RyToon" {
             // Calculate a sheen approximation, which is useful for simulating microfiber lighting for fabric and cloth.
             half sheen = pow(1 - dot(s.Normal, halfAngle), 5) * _SheenIntensity * _SheenColor;
 
+            /*----------------------------- Environment Reflections -----------------------------*/
+            // Calculate skybox reflections from the Unity scene.
+            half3 reflectedDir = reflect(halfAngle, s.Normal);
+            half4 cubemapSample = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectedDir);
+            half3 sceneReflection = DecodeHDR(cubemapSample, unity_SpecCube0_HDR);
+
             /*----------------------------- Calculate Accumulated Lighting -----------------------------*/
             half3 firstLayer = (diffuse + specular) * light.color + subsurface;
-            half4 c = half4(firstLayer, s.Alpha);
+            half4 c = half4(lerp(firstLayer, sceneReflection, saturate(1 - _Roughness)), s.Alpha);
 
 			#ifdef UNITY_LIGHT_FUNCTION_APPLY_INDIRECT
 				c.rgb += s.Albedo * gi.indirect.diffuse;
