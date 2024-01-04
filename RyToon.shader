@@ -18,7 +18,7 @@
 // Fresnel Wiki                                                 -   https://en.wikipedia.org/wiki/Fresnel_equations
 // Beckmann Distribution Wiki                                   -   https://en.wikipedia.org/wiki/Specular_highlight#Beckmann_distribution
 // Schlick's Approximation Wiki                                 -   https://en.wikipedia.org/wiki/Schlick%27s_approximation
-// Catlike Coding (Rendering Part 8)                            -   https://catlikecoding.com/unity/tutorials/rendering/part-8/
+// Catlike Coding Rendering Tutorial                            -   https://catlikecoding.com/unity/tutorials/rendering/
 
 
 Shader "MatLayer/RyToon" {
@@ -98,18 +98,22 @@ Shader "MatLayer/RyToon" {
         half CookTorrance(half NdotL, half NdotH, half3 NdotV, half LdotH, half HdotV, half roughness, half F0) {
             // Calculate microfacet distribution using the Beckmann method.
             half D = BeckmannDistribution(NdotH, roughness);
-
-            // TODO: Ensure this is correct!
+            
             // Calculate fresnel using Schlick's approximation.
             half F = F0 + (1 - F0) * pow(saturate(1 - HdotV), 5);
+
+            // Inverted Fresnel
+            //half F = saturate(1 - NdotV);
 
             // Calculate geometric attenuation.
             half G1 = 2 * NdotH * NdotV / HdotV;
             half G2 = 2 * NdotH * NdotL / HdotV;
             half G = min(1, min(G1, G2));
 
-            // Accumulate specular reflection.
+            // Accumulate specular reflection (modded calculation).
             return (D * F * G) * NdotL;
+
+            // Official 'Wiki' version of the accumulated cook-torrance calculation.
             //return (D * F * G) / 4 * NdotV * NdotL;
         }
 
@@ -146,7 +150,6 @@ Shader "MatLayer/RyToon" {
             /*----------------------------- Specular Highlights -----------------------------*/
             // To simulate smoothness and roughness we'll calculate specular highlights using the Cook-Torrance method.
             // Blender (likely) uses the Cook-Torrance method for calculating specular highlighting in the Specular BSDF shader.
-            //half3 specular = OldCookTorrance(NdotL, NdotH, NdotV, LdotH, clamp(_Roughness, 0.025, 1.0), _SpecularColor) * _SpecularColor;
             half3 specular = CookTorrance(NdotL, NdotH, NdotV, LdotH, HdotV, clamp(_Roughness, 0.025, 1.0), _SpecularColor) * _SpecularColor;
 
             /*----------------------------- Artifical Metallic -----------------------------*/
@@ -168,11 +171,13 @@ Shader "MatLayer/RyToon" {
 
             /*----------------------------- Calculate Accumulated Lighting -----------------------------*/
             half3 firstLayer = (diffuse + specular) * light.color + subsurface;
-            half4 c = half4(lerp(firstLayer, sceneReflection, saturate(1 - _Roughness)), s.Alpha);
+            half4 c = half4(firstLayer, s.Alpha);
 
 			#ifdef UNITY_LIGHT_FUNCTION_APPLY_INDIRECT
 				c.rgb += s.Albedo * gi.indirect.diffuse;
 			#endif
+
+            c.rgb = sceneReflection;
 
             return c;
         }
