@@ -7,7 +7,7 @@ Shader "RyToon2"
         _Tint ("Tint", Color) = (1, 1, 1, 1)
         _MainTex ("Albedo", 2D) = "white" {}
         _Smoothness ("Smoothness", Range(0, 1)) = 0.5
-        _SpecularTint ("Specular Tint", Color) = (0.5, 0.5, 0.5)
+        [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -20,12 +20,14 @@ Shader "RyToon2"
         Pass
         {
             CGPROGRAM
+            #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog               // Make fog work.
 
-            #include "UnityStandardBRDF.cginc"      // Included for access to DotClamped and other useful shader functions.
-            #include "UnityStandardUtils.cginc"     // Included for access to EnergyConservationBetweenDiffuseAndSpecular function.
+            #include "UnityPBSLighting.cginc"
+            //#include "UnityStandardBRDF.cginc"      // Included for access to DotClamped and other useful shader functions.
+            //#include "UnityStandardUtils.cginc"     // Included for access to EnergyConservationBetweenDiffuseAndSpecular function.
 
 			struct VertexData {
 				float4 position : POSITION;
@@ -45,7 +47,7 @@ Shader "RyToon2"
             float4 _MainTex_ST;
             fixed4 _Tint;
             float _Smoothness;
-            fixed3 _SpecularTint;
+            float _Metallic;
 
 			Interpolators vert (VertexData v) {
 				Interpolators i;
@@ -59,29 +61,33 @@ Shader "RyToon2"
 
             fixed4 frag (Interpolators i) : SV_Target
             {
-                // You can skip renormalizing for better performance on mobile devices.
-                // Renormalize because lerping between vertices will not result in a unit-length vector.
-                i.normal = normalize(i.normal);
+				i.normal = normalize(i.normal);
+				float3 lightDir = _WorldSpaceLightPos0.xyz;
+				float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
 
-                //UNITY_APPLY_FOG(i.fogCoord, col);
+				float3 lightColor = _LightColor0.rgb;
+				float3 albedo = tex2D(_MainTex, i.uv).rgb * _Tint.rgb;
 
-                float3 lightDir = _WorldSpaceLightPos0.xyz;
-                float3 lightColor = _LightColor0.rgb;
-                float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
-                float3 albedo = tex2D(_MainTex, i.uv).rgb * _Tint.rgb;
-                float3 diffuse = albedo * lightColor * DotClamped(lightDir, i.normal);
-                float3 halfVector = normalize(lightDir + viewDir);
+				float3 specularTint;
+				float oneMinusReflectivity;
+				albedo = DiffuseAndSpecularFromMetallic(
+					albedo, _Metallic, specularTint, oneMinusReflectivity
+				);
+				
+				UnityLight light;
+				light.color = lightColor;
+				light.dir = lightDir;
+				light.ndotl = DotClamped(i.normal, lightDir);
+				UnityIndirect indirectLight;
+				indirectLight.diffuse = 0;
+				indirectLight.specular = 0;
 
-                // Factor the specular tint into the albedo so the lighting will never exceed the light source strength.
-                // We'll use Unity's built in function from 'UnityStandardUtils.cginc' for calculating energy conservation.
-                float oneMinusReflectivity;
-                albedo = EnergyConservationBetweenDiffuseAndSpecular(albedo, _SpecularTint.rgb, oneMinusReflectivity);
-
-                float3 specular = _SpecularTint.rgb * lightColor * pow(
-                    DotClamped(halfVector, i.normal),
-                    _Smoothness * 100
-                );
-                return float4(diffuse + specular, 1);
+				return UNITY_BRDF_PBS(
+					albedo, specularTint,
+					oneMinusReflectivity, _Smoothness,
+					i.normal, viewDir,
+					light, indirectLight
+				);
             }
             ENDCG
         }
