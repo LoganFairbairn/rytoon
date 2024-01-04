@@ -22,11 +22,10 @@ Shader "RyToon2"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fog       // Make fog work.
+            #pragma multi_compile_fog               // Make fog work.
 
-            // This includes the core file UnityCG.cginc too!
-            // Included for access to DotClamped and other useful shader functions.
-            #include "UnityStandardBRDF.cginc"
+            #include "UnityStandardBRDF.cginc"      // Included for access to DotClamped and other useful shader functions.
+            #include "UnityStandardUtils.cginc"     // Included for access to EnergyConservationBetweenDiffuseAndSpecular function.
 
 			struct VertexData {
 				float4 position : POSITION;
@@ -73,8 +72,10 @@ Shader "RyToon2"
                 float3 diffuse = albedo * lightColor * DotClamped(lightDir, i.normal);
                 float3 halfVector = normalize(lightDir + viewDir);
 
-                // Energy conservation.
-                albedo *= 1 - _SpecularTint.rgb;
+                // Factor the specular tint into the albedo so the lighting will never exceed the light source strength.
+                // We'll use Unity's built in function from 'UnityStandardUtils.cginc' for calculating energy conservation.
+                float oneMinusReflectivity;
+                albedo = EnergyConservationBetweenDiffuseAndSpecular(albedo, _SpecularTint.rgb, oneMinusReflectivity);
 
                 float3 specular = _SpecularTint.rgb * lightColor * pow(
                     DotClamped(halfVector, i.normal),
