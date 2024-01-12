@@ -58,7 +58,7 @@ Cheers!
 10. Unity documentation - <a href="https://docs.unity3d.com/Manual/SL-SurfaceShaderLightingExamples.html" target="_blank" name="10">Surface Shader Lighting Examples</a>
 11. Advances in Realtime Rendering SigGraph 2016 <a href="https://advances.realtimerendering.com/s2010/Hable-Uncharted2(SIGGRAPH%202010%20Advanced%20RealTime%20Rendering%20Course).pdf" target="_blank" name="11">The Process of Creating Volumetric-based Materials in Uncharted 4</a> by Yibing Jiang (Naughty Dog) slide 22
 12. Blender Manual for the <a href="https://docs.blender.org/manual/en/latest/render/shader_nodes/shader/glossy.html#glossy-bsdf" target="_blank" name="12">Glossy BSDF</a>
-13. <a href="https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model" target="_blank" name="13">Blinn-Phone Reflection Model</a>
+13. <a href="https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model" target="_blank" name="13">Blinn-Phong Reflection Model</a>
 
 ## FAQ
 
