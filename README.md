@@ -51,7 +51,7 @@ Cheers!
 3. <a href="https://github.com/poiyomi/PoiyomiToonShader" target="_blank" name="3">Poiyomi Shader</a>
 4. Microfacet BRDF: Theory and Implementation of Basic PBR Materials [Shaders Monthly #9] - <a href="https://youtu.be/gya7x9H3mV0?si=Mvc9rkKFVvDJjx0d&t=930" target="_blank" name="4">GGX Microfacet Distribution</a>
 5. Catlike coding <a href="https://catlikecoding.com/unity/tutorials/rendering/part-4/" target="_blank" name="5">Rendering Part 4</a> (covers PBR lighting calculations in Unity, and a fairly accurate approximation of metallic and specular workflow)
-6. <a href="https://catlikecoding.com/unity/tutorials/rendering/part-4/" target="_blank" name="6">Fast Subsurface Scattering for Unity URP</a> by John Austin
+6. <a href="https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp" target="_blank" name="6">Fast Subsurface Scattering for Unity URP</a> by John Austin
 7. <a href="https://developer.valvesoftware.com/wiki/Half_Lambert" target="_blank" name="7">Half Lambert</a> lighting from Valve
 8. <a href="https://steamcdn-a.akamaihd.net/apps/valve/2008/GDC2008_StylizationWithAPurpose_TF2.pdf" target="_blank" name="8">Stylization with a Purpose</a> The Illustrative World of Team Fortress 2 by Jason Mitchell
 9. <a href="https://www.jordanstevenstechart.com/lighting-models" target="_blank" name="9">Lighting Models</a> by Jordan Stevens
