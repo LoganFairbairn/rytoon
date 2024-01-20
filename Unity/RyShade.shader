@@ -21,7 +21,7 @@
 // Catlike Coding Rendering Tutorial                            -   https://catlikecoding.com/unity/tutorials/rendering/
 
 
-Shader "RyToon" {
+Shader "RyShade" {
     Properties {
         [MainColor] _Color ("Color", Color) = (1, 1, 1, 1)
         [MainTexture] _ColorTexture ("Color Texture", 2D) = "white" {}
