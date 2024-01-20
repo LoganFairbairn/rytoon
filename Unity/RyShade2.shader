@@ -4,8 +4,8 @@ Shader "RyToon2"
     {
         _Tint ("Tint", Color) = (1, 1, 1, 1)
         _MainTex ("Albedo", 2D) = "white" {}
-        _Smoothness ("Smoothness", Range(0, 1)) = 0.5
         [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
+        _Smoothness ("Smoothness", Range(0, 1)) = 0.5
     }
     SubShader
     {
@@ -13,26 +13,24 @@ Shader "RyToon2"
         {
 			Tags {
 				"LightMode" = "ForwardBase"
-				"RenderType" = "Opaque"
 			}
 			LOD 100
 
             CGPROGRAM
 
             #pragma target 3.0
+			#pragma multi_compile _ VERTEXLIGHT_ON
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fog               // Make fog work.
-			#include "MyLighting.cginc"
+            #pragma multi_compile_fog
 
-			#if !defined(MY_LIGHTING_INCLUDED)
-			#define MY_LIGHTING_INCLUDED
-			#include "UnityPBSLighting.cginc"
-			#endif
+			#define FORWARD_BASE_PASS
+			#include "MyLighting.cginc"
 
             ENDCG
         }
 
+		// Second pass draws lighing for additional directional, point and spot lights.
 		Pass {
 			Tags {
 				"LightMode" = "ForwardAdd"
@@ -44,6 +42,7 @@ Shader "RyToon2"
 			CGPROGRAM
 
 			#pragma target 3.0
+			#pragma multi_compile DIRECTIONAL POINT SPOT
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "MyLighting.cginc"
