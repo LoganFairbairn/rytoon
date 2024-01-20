@@ -1,25 +1,4 @@
-// RyToon is an NPR (non-photo-realistic) shader that's designed to render anime and toon assets 'half way' between physicially based and a fully toon shader.
-// The aim of the shader is to allow assets to look 'toon like', while still looking good, and not out of place in most lighting conditions.
-// This makes the use of the shader ideal for VRChat as many worlds use PBR realistic lighting, while many characters are toon based.
-
-// A big benefit of using this shader is there is an equivalent shader in Blender, where the mathematical algorithms for lighting and the input parameters are compatible.
-// This allows users to view how their assets will look like in Blender without having to import them into Unity.
 // Github for this shader: https://github.com/LoganFairbairn/RyToon
-
-// Reference links for this shader:
-// Fast Subsurface Scattering for Unity URP                     -   https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
-// Lighting Models in Unity                                     -   https://www.jordanstevenstechart.com/lighting-models
-// Genshin Impact Shader in UE5                                 -   https://www.artstation.com/artwork/g0gGOm
-// Ben Ayers Blender NPR Genshin Impact Shader                  -   https://www.artstation.com/blogs/bjayers/9oOD/blender-npr-recreating-the-genshin-impact-shader
-// Unity Surface Shader Lighting Examples                       -   https://docs.unity3d.com/Manual/SL-SurfaceShaderLightingExamples.html
-// Support all light shadow types with 'fullforwardshadows'     -   https://docs.unity3d.com/Manual/SL-SurfaceShaders.html
-// Inspired by the Poiyomi toon shader                          -   https://github.com/poiyomi/PoiyomiToonShader
-// Specular Highlight Wiki                                      -   https://en.wikipedia.org/wiki/Specular_highlight
-// Fresnel Wiki                                                 -   https://en.wikipedia.org/wiki/Fresnel_equations
-// Beckmann Distribution Wiki                                   -   https://en.wikipedia.org/wiki/Specular_highlight#Beckmann_distribution
-// Schlick's Approximation Wiki                                 -   https://en.wikipedia.org/wiki/Schlick%27s_approximation
-// Catlike Coding Rendering Tutorial                            -   https://catlikecoding.com/unity/tutorials/rendering/
-
 
 Shader "RyShade" {
     Properties {
