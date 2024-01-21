@@ -11,6 +11,8 @@ Shader "RyShade" {
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
         _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
         _SubsurfaceTint ("Subsurface Tint", Color) = (1.0, 0.0, 0.0, 1.0)
+        _EmissionColor ("Color", Color) = (1, 1, 1, 1)
+        _EmissionStrength ("Emission Strength", Range(0, 10)) = 0
         _EmissionTexture ("Emission Texture", 2D) = "black" {}
     }
     SubShader {

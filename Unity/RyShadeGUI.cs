@@ -25,9 +25,10 @@ public class RyShadeGUI : ShaderGUI {
 
         MaterialProperty normalMap = FindProperty("_NormalMap");
         editor.TexturePropertySingleLine(MakeLabel(normalMap.displayName, "Normal Map"), normalMap);
-        
-        MaterialProperty EmissionTextureProperty = FindProperty("_EmissionTexture");
-        editor.TexturePropertySingleLine(MakeLabel(EmissionTextureProperty.displayName, "Emission (glow) texture."), EmissionTextureProperty);
+
+        MaterialProperty emissionTextureProperty = FindProperty("_EmissionTexture");
+        MaterialProperty emissionColor = FindProperty("_EmissionColor");
+        editor.TexturePropertySingleLine(MakeLabel(emissionTextureProperty.displayName, "Emission (glow) color."), emissionTextureProperty, emissionColor);
 
         // Adjustments
         GUILayout.Label("Adjustments", EditorStyles.boldLabel);
@@ -46,6 +47,9 @@ public class RyShadeGUI : ShaderGUI {
 
         MaterialProperty subsurfaceTintProperty = FindProperty("_SubsurfaceTint");
         editor.ShaderProperty(subsurfaceTintProperty, MakeLabel(subsurfaceTintProperty.displayName));  
+
+        MaterialProperty emissionStrengthProperty = FindProperty("_EmissionStrength");
+        editor.ShaderProperty(emissionStrengthProperty, MakeLabel(emissionStrengthProperty.displayName));
 
         // Projection
         GUILayout.Label("Projection", EditorStyles.boldLabel);
