@@ -55,6 +55,10 @@ public class RyShadeGUI : ShaderGUI {
         // Projection
         GUILayout.Label("Projection", EditorStyles.boldLabel);
         editor.TextureScaleOffsetProperty(albedoTextureProperty);
+
+        // Render Settings
+        GUILayout.Label("Rendering Settings", EditorStyles.boldLabel);
+        editor.EnableInstancingField();
 	}
 
     // Convenience function for finding a material property from within the shader.
