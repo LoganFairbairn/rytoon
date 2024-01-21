@@ -46,8 +46,11 @@ public class RyShadeGUI : ShaderGUI {
         MaterialProperty subsurfaceIntensityProperty = FindProperty("_SubsurfaceIntensity");
         editor.ShaderProperty(subsurfaceIntensityProperty, MakeLabel(subsurfaceIntensityProperty.displayName));
 
-        MaterialProperty subsurfaceRadiusProperty = FindProperty("_SubsurfaceRadius");
-        editor.ShaderProperty(subsurfaceRadiusProperty, MakeLabel(subsurfaceRadiusProperty.displayName));
+        MaterialProperty subsurfaceWrapProperty = FindProperty("_SubsurfaceWrap");
+        editor.ShaderProperty(subsurfaceWrapProperty, MakeLabel(subsurfaceWrapProperty.displayName));
+
+        MaterialProperty subsurfaceWidthProperty = FindProperty("_SubsurfaceWidth");
+        editor.ShaderProperty(subsurfaceWidthProperty, MakeLabel(subsurfaceWidthProperty.displayName));
 
         MaterialProperty emissionStrengthProperty = FindProperty("_EmissionStrength");
         editor.ShaderProperty(emissionStrengthProperty, MakeLabel(emissionStrengthProperty.displayName));

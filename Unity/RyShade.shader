@@ -10,8 +10,9 @@ Shader "RyShade" {
         [Gamma] _Metallic ("Metallic Offset", Range(0, 1)) = 0
         _SubsurfaceTexture ("Subsurface Texture", 2D) = "black" {}
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
-        _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
+        _SubsurfaceWrap ("Subsurface Wrap", Range(0, 1)) = 0.2
         _SubsurfaceTint ("Subsurface Tint", Color) = (1.0, 0.0, 0.0, 1.0)
+        _SubsurfaceWidth ("Subsurface Width", Range(0, 1)) = 0.5
         _EmissionColor ("Color", Color) = (1, 1, 1, 1)
         _EmissionStrength ("Emission Strength", Range(0, 10)) = 0
         _EmissionTexture ("Emission Texture", 2D) = "black" {}
@@ -51,10 +52,11 @@ Shader "RyShade" {
         half _Roughness;
         half _Metallic;
         half _SubsurfaceIntensity;
-        half _SubsurfaceRadius;
+        half _SubsurfaceWrap;
         fixed4 _SubsurfaceTint;
         fixed4 _SheenColor;
         half _SheenIntensity;
+        half _SubsurfaceWidth;
 
         // Add shader instancing support.
 		UNITY_INSTANCING_BUFFER_START(Props)
@@ -75,31 +77,6 @@ Shader "RyShade" {
             return saturate(exp(-tanThetaHSqr / (alpha * alpha)) / (PI * alpha * alpha * cosThetaH * cosThetaH * cosThetaH * cosThetaH));
         }
 
-        // Deprecated
-        /*
-        half CookTorrance(half NdotL, half NdotH, half3 NdotV, half LdotH, half HdotV, half roughness, half F0) {
-            // Calculate microfacet distribution using the Beckmann method.
-            half D = BeckmannDistribution(NdotH, roughness);
-            
-            // Calculate fresnel using Schlick's approximation.
-            half F = F0 + (1 - F0) * pow(saturate(1 - HdotV), 5);
-
-            // Inverted Fresnel
-            //half F = saturate(1 - NdotV);
-
-            // Calculate geometric attenuation.
-            half G1 = 2 * NdotH * NdotV / HdotV;
-            half G2 = 2 * NdotH * NdotL / HdotV;
-            half G = min(1, min(G1, G2));
-
-            // Accumulate specular reflection (modded calculation).
-            return (D * F * G) * NdotL;
-
-            // Official 'Wiki' version of the accumulated cook-torrance calculation.
-            //return (D * F * G) / 4 * NdotV * NdotL;
-        }
-        */
-
        /*----------------------------- Custom Lighting Calculations -----------------------------*/
         inline half4 LightingRyToon (CustomSurfaceOutput s, half3 viewDir, UnityGI gi) {
 
@@ -118,8 +95,15 @@ Shader "RyShade" {
             half LdotH = saturate(dot(lightDir, halfAngle));
             half HdotV = saturate(dot(halfAngle, viewDir));
 
-            /*----------------------------- Specular Highlights & Metallic -----------------------------*/
+            /*----------------------------- Diffuse Lighting -----------------------------*/
+            // Half Lambert lighting is a technique created by Valve for Half-Life designed to prevent the rear of the object from losing it's shape.
+            // This technique provides a good middle ground between a totally toon lighting approach and a physically accurate approach.
+            // Calculate diffuse lighting using the half-lambert lighting method.
+            half3 diffuse = max(0, NdotL * 0.5 + 0.5);
 
+            /*----------------------------- Specular Highlights, Metallic & Environment Reflections -----------------------------*/
+
+            /*
             // The 'Glossy BSDF' node in Blender has a Beckmann distribution model, so we can match that by calculating the Beckmann distribuition here.
             // To simulate smooth and rough materials, calculate specular highlights using the Beckmann distribution model.
             half3 specularTint;
@@ -132,40 +116,28 @@ Shader "RyShade" {
             //half3 specular = specularTint * light.color * CookTorrance(NdotL, NdotH, NdotV, LdotH, HdotV, clamp(_Roughness, 0.025, 1.0), _SpecularColor);
             half specular = light.color * BeckmannDistribution(NdotH, _Roughness);
 
-            /*----------------------------- Artifical Metallic -----------------------------*/
-            // Experimental...
-            // Calculate artifical metalness as a spherical gradient matcap.
-            /*
-            half3 viewSpaceNormals = mul((float3x3)UNITY_MATRIX_V, s.Normal);
-            viewSpaceNormals.xyz *= float3(0.5, 0.5, 1.0);
-            half metallic = saturate(1 - (length(viewSpaceNormals)));
-            metallic = lerp(1, smoothstep(0.3, 0.0, metallic), _Metallic);
-            */
-
-            /*----------------------------- Diffuse Lighting -----------------------------*/
-            // Half Lambert lighting is a technique created by Valve for Half-Life designed to prevent the rear of the object from losing it's shape.
-            // This technique provides a good middle ground between a totally toon lighting approach and a physically accurate approach.
-            // Calculate diffuse lighting using the half-lambert lighting model.
-            half3 diffuse = albedo * light.color * pow(NdotL * 0.5 + 0.5, 2);
-
-            /*----------------------------- Artifical Subsurface Scattering -----------------------------*/
-            // Subsurface scattering simulates light scattering through objects such as skin, food, wax and clothes, and is important for modern anime and toon shaders looking good, use the Genshin Impact shader as an example.
-            // We'll calculation a diffuse wrap (similar to half lambert) as an approximation for subsurface scattering.
-            half3 subsurface = pow(NdotL * _SubsurfaceRadius + (1 - _SubsurfaceRadius), 2) * _SubsurfaceTint * _SubsurfaceIntensity;
-
-            /*----------------------------- Environment Reflections -----------------------------*/
             // Calculate skybox reflections from the Unity scene.
             half3 reflectedDir = reflect(halfAngle, s.Normal);
             half4 cubemapSample = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectedDir);
             half3 sceneReflection = DecodeHDR(cubemapSample, unity_SpecCube0_HDR);
+            */
+
+            /*----------------------------- Fast Subsurface Scattering -----------------------------*/
+            // Subsurface scattering simulates light scattering through objects such as skin, milk, food, wax and sometimes clothes.
+            // Many modern stylized shaders take advantage of subsurface scattering, making it an important part in a modern stylized shader.
+            // Since we don't need realistic subsurface scattering for a stylized shader, we'll use a fast approximation of subsurface.
+            // We can calculate a fast approximation of subsurface scattering using a ramped version of the diffuse lighting.
+            // This is a technique often refered to as a 'diffuse wrap'.
+            half diffuse_wrap = max(0, (diffuse + _SubsurfaceWrap) / (1 + _SubsurfaceWrap));
+            half3 subsurface = smoothstep(0.0, _SubsurfaceWidth, diffuse_wrap) * smoothstep(_SubsurfaceWidth * 2, _SubsurfaceWidth, diffuse_wrap) * _SubsurfaceTint * _SubsurfaceIntensity;
 
             /*----------------------------- Calculate Accumulated Lighting -----------------------------*/
 
-            half4 c = half4(diffuse + specular + subsurface, s.Alpha);
+            half4 c = half4(diffuse + subsurface, s.Alpha);
 
-			#ifdef UNITY_LIGHT_FUNCTION_APPLY_INDIRECT
-				c.rgb += s.Albedo * gi.indirect.diffuse;
-			#endif
+			//#ifdef UNITY_LIGHT_FUNCTION_APPLY_INDIRECT
+			//	c.rgb += s.Albedo * gi.indirect.diffuse;
+			//#endif
 
             return c;
         }
@@ -177,8 +149,8 @@ Shader "RyShade" {
         /*----------------------------- Apply Textures & Channel Packing  -----------------------------*/
         void surf (Input IN, inout CustomSurfaceOutput o) {
             o.Albedo = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Tint;
-            o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_NormalMap));
-            o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
+            //o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_NormalMap));
+            //o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
         }
         ENDCG
     } 
