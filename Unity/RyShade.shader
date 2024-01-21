@@ -2,18 +2,18 @@
 
 Shader "RyShade" {
     Properties {
-        [MainColor] _Color ("Color", Color) = (1, 1, 1, 1)
+        [MainColor] _Tint ("Tint", Color) = (1, 1, 1, 1)
         [MainTexture] _ColorTexture ("Color Texture", 2D) = "white" {}
         [Normal] _NormalMap ("Normal Map", 2D) = "bump" {}
         _ORMTexture ("ORM Texture", 2D) = "black" {}
-        _EmissionTexture ("Emission Texture", 2D) = "black" {}
-        [Gamma] _Roughness ("Roughness", Range(0, 1)) = 0.5
-        [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
+        [Gamma] _Roughness ("Roughness Offset", Range(0, 1)) = 0.5
+        [Gamma] _Metallic ("Metallic Offset", Range(0, 1)) = 0
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
         _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
-        _SubsurfaceColor ("Subsurface Color", Color) = (1.0, 0.2, 0.1, 1.0)
+        _SubsurfaceTint ("Subsurface Tint", Color) = (1.0, 0.0, 0.0, 1.0)
         _SheenIntensity ("Sheen Intensity", Range(0, 1)) = 0.0
         _SheenColor ("Sheen Color", Color) = (1, 1, 1, 1)
+        _EmissionTexture ("Emission Texture", 2D) = "black" {}
     }
     SubShader {
         Tags { "RenderType" = "Opaque" }
@@ -46,12 +46,12 @@ Shader "RyShade" {
         sampler2D _ORMTexture;
         sampler2D _NormalMap;
         sampler2D _EmissionTexture;
-        fixed4 _Color;
+        fixed4 _Tint;
         half _Roughness;
         half _Metallic;
         half _SubsurfaceIntensity;
         half _SubsurfaceRadius;
-        fixed4 _SubsurfaceColor;
+        fixed4 _SubsurfaceTint;
         fixed4 _SheenColor;
         half _SheenIntensity;
 
@@ -154,7 +154,7 @@ Shader "RyShade" {
             /*----------------------------- Artifical Subsurface Scattering -----------------------------*/
             // Subsurface scattering simulates light scattering through objects such as skin, food, wax and clothes, and is important for modern anime and toon shaders looking good, use the Genshin Impact shader as an example.
             // We'll calculation a diffuse wrap (similar to half lambert) as an approximation for subsurface scattering.
-            half3 subsurface = pow(NdotL * _SubsurfaceRadius + (1 - _SubsurfaceRadius), 2) * _SubsurfaceColor * _SubsurfaceIntensity;
+            half3 subsurface = pow(NdotL * _SubsurfaceRadius + (1 - _SubsurfaceRadius), 2) * _SubsurfaceTint * _SubsurfaceIntensity;
 
             /*----------------------------- Environment Reflections -----------------------------*/
             // Calculate skybox reflections from the Unity scene.
@@ -179,11 +179,13 @@ Shader "RyShade" {
 
         /*----------------------------- Apply Textures & Channel Packing  -----------------------------*/
         void surf (Input IN, inout CustomSurfaceOutput o) {
-            o.Albedo = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Color;
+            o.Albedo = (tex2D (_ColorTexture, IN.uv_ColorTexture).rgb) * _Tint;
             o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_NormalMap));
             o.Emission = (tex2D (_EmissionTexture, IN.uv_EmissionTexture).rgb);
         }
         ENDCG
     } 
+
     Fallback "Diffuse"
+    CustomEditor "RyShadeGUI"
 }
