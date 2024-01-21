@@ -11,8 +11,6 @@ Shader "RyShade" {
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
         _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
         _SubsurfaceTint ("Subsurface Tint", Color) = (1.0, 0.0, 0.0, 1.0)
-        _SheenIntensity ("Sheen Intensity", Range(0, 1)) = 0.0
-        _SheenColor ("Sheen Color", Color) = (1, 1, 1, 1)
         _EmissionTexture ("Emission Texture", 2D) = "black" {}
     }
     SubShader {
@@ -116,10 +114,6 @@ Shader "RyShade" {
             half NdotV = saturate(dot(s.Normal, viewDir));
             half LdotH = saturate(dot(lightDir, halfAngle));
             half HdotV = saturate(dot(halfAngle, viewDir));
-
-            /*----------------------------- Sheen -----------------------------*/
-            // Calculate a sheen approximation, which is useful for simulating microfiber lighting for fabric and cloth.
-            half sheen = pow(1 - dot(s.Normal, halfAngle), 5) * _SheenIntensity * _SheenColor;
 
             /*----------------------------- Specular Highlights & Metallic -----------------------------*/
 
