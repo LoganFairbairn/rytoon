@@ -8,6 +8,7 @@ Shader "RyShade" {
         _ORMTexture ("ORM Texture", 2D) = "black" {}
         [Gamma] _Roughness ("Roughness Offset", Range(0, 1)) = 0.5
         [Gamma] _Metallic ("Metallic Offset", Range(0, 1)) = 0
+        _SubsurfaceTexture ("Subsurface Texture", 2D) = "black" {}
         _SubsurfaceIntensity ("Subsurface Intensity", Range(0, 1)) = 0
         _SubsurfaceRadius ("Subsurface Radius", Range(0, 1)) = 0.5
         _SubsurfaceTint ("Subsurface Tint", Color) = (1.0, 0.0, 0.0, 1.0)
